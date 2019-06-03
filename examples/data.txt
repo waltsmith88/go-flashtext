@@ -1,2 +1,2 @@
-abca => English
+abc => abc
 中国 => 中文
