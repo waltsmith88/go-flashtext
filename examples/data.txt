@@ -1,0 +1,2 @@
+abca => English
+中国 => 中文
