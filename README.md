@@ -37,7 +37,7 @@ package main
 
 import (
 	"fmt"
-    gf "github.com/waltsmith88/go-flashtext"
+	gf "github.com/waltsmith88/go-flashtext"
 )
 
 func main() {
@@ -61,7 +61,7 @@ package main
 
 import (
 	"fmt"
-    gf "github.com/waltsmith88/go-flashtext"
+    	gf "github.com/waltsmith88/go-flashtext"
 )
 
 func main() {
@@ -86,7 +86,7 @@ package main
 
 import (
 	"fmt"
-    gf "github.com/waltsmith88/go-flashtext"
+    	gf "github.com/waltsmith88/go-flashtext"
 )
 
 func main() {
@@ -155,7 +155,7 @@ keywordMap := map[string]string{
 		"abcd": "abcd",
 		"student": "stu",
 	}
-	keywordProcessor.AddKeywordsFromMap(keywordMap)
+keywordProcessor.AddKeywordsFromMap(keywordMap)
 // way 2: from Slice
 keywordProcessor.AddKeywordsFromList([]string{"student", "abcd", "abc", "中文"})
 // way 3: from file. Line: keyword => cleanName
