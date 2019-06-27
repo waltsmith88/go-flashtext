@@ -170,11 +170,8 @@ func (KeywordProcessor *keywordProcessor) __setItem__(keyword string, cleanName 
 func (KeywordProcessor *keywordProcessor) AddKeyword(keyword string, cleanNames ...string) bool {
 	var (
 		cleanName		string
-		commDictKey 	[]int32
-		commDictValue 	[]map[int32]interface{}
 		diffDict 		map[int32]interface{}
 		commDict 		map[int32]interface{}
-		resDict 		map[int32]interface{}
 	)
 	if len(cleanNames) == 0 {
 		cleanName = keyword
@@ -188,11 +185,9 @@ func (KeywordProcessor *keywordProcessor) AddKeyword(keyword string, cleanNames 
 	currentDict := KeywordProcessor.keywordTrieDict
 
 	for i, letter := range keyword {
-		commDictValue = append(commDictValue, currentDict)
 		if currentDict_, err := currentDict[letter]; err {
 			currentDict = currentDict_.(map[int32]interface{})
 			commDict = currentDict
-			commDictKey = append(commDictKey, letter)
 		} else {
 			diffDict = KeywordProcessor.__setItem__(keyword[i:], cleanName)
 			break
@@ -208,6 +203,8 @@ func (KeywordProcessor *keywordProcessor) AddKeyword(keyword string, cleanNames 
 			}
 		}
 		KeywordProcessor.keywordTrieDict = currentDict
+
+		KeywordProcessor.termsInTrie++
 		return true
 	}
 
@@ -218,18 +215,19 @@ func (KeywordProcessor *keywordProcessor) AddKeyword(keyword string, cleanNames 
 			} else {  // not unique keyword
 				commDict[__key__] = cleanName
 			}
+
+			KeywordProcessor.termsInTrie++
 			return true
 		} else {
 			diffDict = map[int32]interface{}{__key__: cleanName}
 		}
 	}
 
-	resDict = commDictValue[len(commDictValue)-1]
 	for k, v := range diffDict {
-		resDict[k] = v
+		commDict[k] = v
 	}
-	KeywordProcessor.termsInTrie++
 
+	KeywordProcessor.termsInTrie++
 	return true
 }
 
