@@ -1,8 +1,8 @@
 package flashtext
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestAddKeywords(t *testing.T) {
