@@ -1,12 +1,11 @@
 package main
 
 import (
-	gf "../../go-flashtext"
 	"fmt"
+	gf "github.com/waltsmith88/go-flashtext"
 	"log"
 	"path/filepath"
 	"runtime"
-	//gf "github.com/waltsmith88/go-flashtext"
 )
 
 func main() {
