@@ -10,8 +10,8 @@ import (
 
 const __key__ = int32(197)
 
-// Keyword Result of Extract
-type keywordRes struct {
+//KeywordRes Result of Extraction
+type KeywordRes struct {
 	CleanName string
 	StartPos  int
 	EndPos    int
@@ -29,9 +29,32 @@ type keywordProcessor struct {
 	delimiter         string
 }
 
-func NewKeywordProcessor() *keywordProcessor {
+type KeywordProcessor interface {
+	GetKeywordTrieDict() map[int32]interface{}
+	GetCaseSensitive() bool
+	SetCaseSensitive(bool)
+	GetUniqueKeyword() bool
+	SetUniqueKeyword(bool)
+	GetDelimiter() string
+	SetDelimiter(string)
+	Len() int
+	IsContains(string) bool
+	GetKeyword(string) (string, bool)
+	GetAllKeywords() map[string]string
+	AddKeyword(string, ...string) bool
+	AddKeywordsFromMap(map[string]string)
+	AddKeywordsFromList([]string)
+	AddKeywordsFromFile(string)
+	RemoveKeywordFromList([]string)
+	RemoveKeyword(string) bool
+	ExtractKeywords(string) []string
+	ExtractKeywordsWithSpanInfo(string) []KeywordRes
+	ReplaceKeywords(string) string
+}
 
-	KeywordProcessor := &keywordProcessor{
+func NewKeywordProcessor() KeywordProcessor {
+
+	kp := &keywordProcessor{
 		caseSensitive:     true,
 		uniqueKeyword:     false,
 		_keyword:          "_keyword_",
@@ -41,13 +64,13 @@ func NewKeywordProcessor() *keywordProcessor {
 		termsInTrie:       0,
 		delimiter:         "|",
 	}
-	return KeywordProcessor
+	return kp
 }
 
 // Default returns an keywordProcessor instance with default values.
-func Default() *keywordProcessor {
-	KeywordProcessor := NewKeywordProcessor()
-	return KeywordProcessor
+func Default() KeywordProcessor {
+	kp := NewKeywordProcessor()
+	return kp
 }
 
 // Get keyword TrieTree
@@ -169,9 +192,9 @@ func (KeywordProcessor *keywordProcessor) __setItem__(keyword string, cleanName 
 // Add a keyword and its' cleanName to TrieTree
 func (KeywordProcessor *keywordProcessor) AddKeyword(keyword string, cleanNames ...string) bool {
 	var (
-		cleanName		string
-		diffDict 		map[int32]interface{}
-		commDict 		map[int32]interface{}
+		cleanName string
+		diffDict  map[int32]interface{}
+		commDict  map[int32]interface{}
 	)
 	if len(cleanNames) == 0 {
 		cleanName = keyword
@@ -212,7 +235,7 @@ func (KeywordProcessor *keywordProcessor) AddKeyword(keyword string, cleanNames 
 		if tmpCleanName, err := commDict[__key__]; err {
 			if tmpCleanName != cleanName && !KeywordProcessor.uniqueKeyword {
 				commDict[__key__] = strings.Join([]string{tmpCleanName.(string), cleanName}, "|")
-			} else {  // not unique keyword
+			} else { // not unique keyword
 				commDict[__key__] = cleanName
 			}
 
@@ -264,12 +287,12 @@ func (KeywordProcessor *keywordProcessor) AddKeywordsFromFile(filePath string) {
 		if err == io.EOF {
 			break
 		}
-		if strings.Contains(string(line), "=>") {  // 1. keyword => cleanName
+		if strings.Contains(string(line), "=>") { // 1. keyword => cleanName
 			lineString := strings.Split(string(line), "=>")
 			keyword := strings.TrimSpace(lineString[0])
 			cleanName := strings.TrimSpace(lineString[1])
 			KeywordProcessor.AddKeyword(keyword, cleanName)
-		} else {  // 2. keyword
+		} else { // 2. keyword
 			keyword := strings.TrimSpace(string(line))
 			KeywordProcessor.AddKeyword(keyword, keyword)
 		}
@@ -286,8 +309,8 @@ func (KeywordProcessor *keywordProcessor) RemoveKeywordFromList(keywordList []st
 // Delete a keyword and its' cleanName from TrieTree
 func (KeywordProcessor *keywordProcessor) RemoveKeyword(keyword string) bool {
 	var (
-		commDictKey  	[]int32
-		commDictValue	[]map[int32]interface{}
+		commDictKey   []int32
+		commDictValue []map[int32]interface{}
 	)
 	currentDict := KeywordProcessor.keywordTrieDict
 
@@ -320,7 +343,7 @@ func (KeywordProcessor *keywordProcessor) RemoveKeyword(keyword string) bool {
 // Extract keywords from sentence by searching TrieTree.
 // And return the keywords' clean names.
 func (KeywordProcessor *keywordProcessor) ExtractKeywords(sentence string) []string {
-	var keywordList 	[]string
+	var keywordList []string
 	if len(sentence) == 0 {
 		return keywordList
 	}
@@ -329,13 +352,13 @@ func (KeywordProcessor *keywordProcessor) ExtractKeywords(sentence string) []str
 	}
 
 	var (
-		start 			[]int
-		sentenceRune	= []rune(sentence)
-		idx				= 0
-		idy 			= 0
-		sentenceLen		= len(sentenceRune)
-		cleanName 		= ""
-		currentDict 	= KeywordProcessor.keywordTrieDict
+		start        []int
+		sentenceRune = []rune(sentence)
+		idx          = 0
+		idy          = 0
+		sentenceLen  = len(sentenceRune)
+		cleanName    = ""
+		currentDict  = KeywordProcessor.keywordTrieDict
 	)
 
 	for idx < sentenceLen {
@@ -377,8 +400,8 @@ func (KeywordProcessor *keywordProcessor) ExtractKeywords(sentence string) []str
 
 // Extract keywords from sentence by searching TrieTree.
 // And return the keywords' clean names, the start position and the end position of keyword in sentence.
-func (KeywordProcessor *keywordProcessor) ExtractKeywordsWithSpanInfo(sentence string) []keywordRes {
-	var keywordList []keywordRes
+func (KeywordProcessor *keywordProcessor) ExtractKeywordsWithSpanInfo(sentence string) []KeywordRes {
+	var keywordList []KeywordRes
 	if len(sentence) == 0 {
 		return keywordList
 	}
@@ -387,13 +410,13 @@ func (KeywordProcessor *keywordProcessor) ExtractKeywordsWithSpanInfo(sentence s
 	}
 
 	var (
-		start 			[]int
-		idx				= 0
-		idy 			= 0
-		cleanName 		= ""
-		sentenceRune 	= []rune(sentence)
-		sentenceLen 	= len(sentenceRune)
-		currentDict 	= KeywordProcessor.keywordTrieDict
+		start        []int
+		idx          = 0
+		idy          = 0
+		cleanName    = ""
+		sentenceRune = []rune(sentence)
+		sentenceLen  = len(sentenceRune)
+		currentDict  = KeywordProcessor.keywordTrieDict
 	)
 
 	for idx < sentenceLen {
@@ -416,7 +439,7 @@ func (KeywordProcessor *keywordProcessor) ExtractKeywordsWithSpanInfo(sentence s
 		if cleanName != "" {
 			startIndex := start[0]
 			endIndex := start[0] + len(start)
-			res := keywordRes{cleanName, startIndex, endIndex}
+			res := KeywordRes{cleanName, startIndex, endIndex}
 			keywordList = append(keywordList, res)
 			idx = start[len(start)-1] + 1
 			idy = idx
@@ -436,7 +459,7 @@ func (KeywordProcessor *keywordProcessor) ExtractKeywordsWithSpanInfo(sentence s
 // Replace keywords in sentence with their cleanName
 func (KeywordProcessor *keywordProcessor) ReplaceKeywords(sentence string) string {
 	var (
-		newSentence  = ""
+		newSentence = ""
 	)
 	if len(sentence) == 0 {
 		return newSentence
@@ -446,14 +469,14 @@ func (KeywordProcessor *keywordProcessor) ReplaceKeywords(sentence string) strin
 	}
 
 	var (
-		start 			[]int
-		replaceIndex    int
-		sentenceRune	= []rune(sentence)
-		idx				= 0
-		idy 			= 0
-		sentenceLen		= len(sentenceRune)
-		cleanName 		= ""
-		currentDict 	= KeywordProcessor.keywordTrieDict
+		start        []int
+		replaceIndex int
+		sentenceRune = []rune(sentence)
+		idx          = 0
+		idy          = 0
+		sentenceLen  = len(sentenceRune)
+		cleanName    = ""
+		currentDict  = KeywordProcessor.keywordTrieDict
 	)
 
 	for idx < sentenceLen {
@@ -496,7 +519,6 @@ func (KeywordProcessor *keywordProcessor) ReplaceKeywords(sentence string) strin
 	}
 	return newSentence
 }
-
 
 // Reverse the given string
 func __reverseString__(s string) string {
